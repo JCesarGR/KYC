@@ -1,0 +1,58 @@
+# API Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Async & HTTP
+httpx==0.26.0
+aiofiles==23.2.1
+
+# Data Processing
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Database
+asyncpg==0.29.0
+sqlalchemy==2.0.25
+alembic==1.13.1
+
+# Scraping & Parsing
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# OCR & Captcha
+pytesseract==0.3.10
+Pillow==10.2.0
+twocaptcha-python==1.2.1
+
+# Fuzzy Matching
+thefuzz[speedup]==0.22.1
+python-Levenshtein==0.25.0
+
+# Graph & Network Analysis
+networkx==3.2.1
+neo4j==5.16.0
+matplotlib==3.8.2
+
+# PDF Generation
+reportlab==4.0.9
+weasyprint==60.2
+
+# Security & Auth
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Logging & Monitoring
+loguru==0.7.2
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# Utils
+pandas==2.1.4
+openpyxl==3.1.2

@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # API Backend
+  kyc-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kyc-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://kyc_user:kyc_password@postgres:5432/kyc_db
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=kyc_neo4j_password
+      - USE_NEO4J=true
+      - ENVIRONMENT=production
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - neo4j
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: kyc-postgres
+    environment:
+      - POSTGRES_DB=kyc_db
+      - POSTGRES_USER=kyc_user
+      - POSTGRES_PASSWORD=kyc_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+  # Neo4j Graph Database
+  neo4j:
+    image: neo4j:5.15-community
+    container_name: kyc-neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/kyc_neo4j_password
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_memory_heap_max__size=2G
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: kyc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: kyc-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - kyc-api
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: kyc-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - kyc-api
+      - frontend
+    networks:
+      - kyc-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  redis_data:
+
+networks:
+  kyc-network:
+    driver: bridge
